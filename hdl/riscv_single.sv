@@ -24,30 +24,30 @@
 //   lw	          0000011   010       immediate
 //   sw           0100011   010       immediate
 //   jal          1101111   immediate immediate
-//   auipc        0010111
-//   bge          1100011
+//   auipc        0010111 y
+//   bge          1100011 
 //   bgeu         1100011
 //   blt          1100011
 //   bltu         1100011
 //   bne          1100011
-//   jalr         1100111
+//   jalr         1100111 y
 //   lb           0000011
 //   lbu          0000011
 //   lh           0000011
 //   lhu          0000011
 //   lui          0110111
-//   sb           0100011
+//   sb           0100011 
 //   sh           0100011
-//   sll          0110011
-//   slli         0010011
-//   sltiu        0010011
+//   sll          0110011 y
+//   slli         0010011 y
+//   sltiu        0010011 
 //   sltu         0110011
-//   sra          0110011
-//   srai         0010011
-//   srl          0110011
-//   srli         0010011
-//   xor          0110011
-//   xori         0010011
+//   sra          0110011 y
+//   srai         0010011 y
+//   srl          0110011 y
+//   srli         0010011 y
+//   xor          0110011 y 
+//   xori         0010011 y
 
 module testbench();
 
@@ -128,7 +128,8 @@ module controller (input  logic [6:0] op,
        input  logic       N,
 		   output logic       ResultSrc,
 		   output logic       MemWrite,
-		   output logic       PCSrc, ALUSrc,
+		   output logic       PCSrc,
+       output logic       ALUSrc,
 		   output logic       RegWrite, Jump,
 		   output logic [2:0] ImmSrc,
 		   output logic [3:0] ALUControl);
@@ -184,7 +185,7 @@ module aludec (input  logic       opb5,
    logic        ItypeSRA;
    
    assign RtypeSub = funct7b5 & opb5; // TRUE for R–type subtract
-   assign ItypeSRA =funct7b5 & ~opb5; // i-tpye
+   assign ItypeSRA = funct7b5 & ~opb5; // srai
    always_comb
      case(ALUOp)
       2'b00: ALUControl = 4'b0000; // addition
@@ -255,7 +256,7 @@ module adder (input  logic [31:0] a, b,
 endmodule
 
 module extend (input  logic [31:7] instr,
-	       input  logic [1:0]  immsrc,
+	       input  logic [2:0]  immsrc,
 	       output logic [31:0] immext);
    
    always_comb
@@ -339,7 +340,7 @@ module top (input  logic        clk, reset,
    dmem dmem (clk, MemWrite, DataAdr, WriteData, ReadData);
    
 endmodule // top
-]
+
 module imem (input  logic [31:0] a,
 	     output logic [31:0] rd);
    
@@ -353,7 +354,7 @@ module dmem (input  logic        clk, we,
 	     input  logic [31:0] a, wd,
 	     output logic [31:0] rd);
    
-   logic [31:0] 		 RAM[255:0];
+   logic [31:0] 		 RAM[63:0];
    
    assign rd = RAM[a[31:2]]; // word aligned
    always_ff @(posedge clk)
