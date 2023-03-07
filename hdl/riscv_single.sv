@@ -269,6 +269,18 @@ module mux3 #(parameter WIDTH = 8)
    
 endmodule // mux3
 
+module comparators #(parameter WIDTH = 8)
+    (input logic [WIDTH-1:0] d0, d1,
+    output logic [WIDTH-1:0] eq, neq, lt, lte, gt, gte);
+    assign eq = (d0 == d1);
+    assign neq = (d0 != d1);
+    assign lt = (d0 < d1);
+    assign lte = (d0 <= d1);
+    assign gt = (d0 > d1);
+    assign gte = (d0 >= d1);
+
+endmodule
+
 module top (input  logic        clk, reset,
 	    output logic [31:0] WriteData, DataAdr,
 	    output logic 	MemWrite);
