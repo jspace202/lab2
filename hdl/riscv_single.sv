@@ -24,6 +24,30 @@
 //   lw	          0000011   010       immediate
 //   sw           0100011   010       immediate
 //   jal          1101111   immediate immediate
+//   auipc        0010111
+//   bge          1100011
+//   bgeu         1100011
+//   blt          1100011
+//   bltu         1100011
+//   bne          1100011
+//   jalr         1100111
+//   lb           0000011
+//   lbu          0000011
+//   lh           0000011
+//   lhu          0000011
+//   lui          0110111
+//   sb           0100011
+//   sh           0100011
+//   sll          0110011
+//   slli         0010011
+//   sltiu        0010011
+//   sltu         0110011
+//   sra          0110011
+//   srai         0010011
+//   srl          0110011
+//   srli         0010011
+//   xor          0110011
+//   xori         0010011
 
 module testbench();
 
@@ -138,6 +162,9 @@ module maindec (input  logic [6:0] op,
        7'b1100011: controls = 11'b0_10_0_0_00_1_01_0; // beq
        7'b0010011: controls = 11'b1_00_1_0_00_0_10_0; // I–type ALU
        7'b1101111: controls = 11'b1_11_0_0_10_0_00_1; // jal
+       //7'b0010111: controls = 11'b1_11_0_0_10_0_00_1; // auipc
+       //7'b1100111: controls = 11'b1_11_0_0_10_0_00_1; // jalr
+       //7'b0110111: controls = 11'b1_11_0_0_10_0_00_1; // lui
        default: controls = 11'bx_xx_x_x_xx_x_xx_x; // ???
      endcase // case (op)
    
