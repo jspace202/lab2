@@ -60,12 +60,12 @@ module testbench();
   logic MemWrite;
 
   // instantiate device to be tested
-  top1 dut(clk, reset, WriteData, DataAdr, MemWrite);
+  top dut(clk, reset, WriteData, DataAdr, MemWrite);
 
   initial begin
     string memfilename;
     memfilename = {"../riscvtest/lab1-tests/blt.memfile"};
-    $readme1h(memfilename, dut.ime1.RAM);
+    $readmemh(memfilename, dut.imem.RAM);
   end
 
   
@@ -337,7 +337,7 @@ module mux3 #(parameter WIDTH = 8)(
    
 endmodule // mux3
 
-module top1 (
+module top (
   input  logic clk, reset,
   output logic [31:0] WriteData, DataAdr,
   output logic 	MemWrite
@@ -347,12 +347,12 @@ module top1 (
   
   // instantiate processor and memories
   riscvsingle rv32single (clk, reset, PC, Instr, MemWrite, DataAdr, WriteData, ReadData);
-  ime1 ime1 (PC, Instr);
-  dme1 dme1 (clk, MemWrite, DataAdr, WriteData, ReadData);
+  imem imem (PC, Instr);
+  dmem dmem (clk, MemWrite, DataAdr, WriteData, ReadData);
    
 endmodule // top
 
-module ime1 (
+module imem (
   input  logic [31:0] a,
   output logic [31:0] rd
   );
@@ -361,9 +361,9 @@ module ime1 (
   
   assign rd = RAM[a[31:2]]; // word aligned
    
-endmodule // ime1
+endmodule // imem
 
-module dme1 (
+module dmem (
   input logic clk, we,
   input  logic [31:0] a, wd,
   output logic [31:0] rd
@@ -375,7 +375,7 @@ module dme1 (
   always_ff @(posedge clk)
     if (we) RAM[a[31:2]] <= wd;
   
-endmodule // dme1
+endmodule // dmem
 
 module alu (
   input  logic [31:0] a, b,
