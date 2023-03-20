@@ -60,12 +60,12 @@ module testbench();
   logic MemWrite;
 
   // instantiate device to be tested
-  top dut(clk, reset, WriteData, DataAdr, MemWrite);
+  top1 dut(clk, reset, WriteData, DataAdr, MemWrite);
 
   initial begin
     string memfilename;
     memfilename = {"../riscvtest/lab1-tests/blt.memfile"};
-    $readmemh(memfilename, dut.imem.RAM);
+    $readme1h(memfilename, dut.ime1.RAM);
   end
 
   
@@ -261,6 +261,15 @@ module adder (
    
 endmodule
 
+module subtractor (
+  input  logic [31:0] a, b,
+  output logic [31:0] y
+  );
+  
+  assign y = a - b;
+   
+endmodule
+
 module extend (
   input  logic [31:7] instr,
   input  logic [2:0]  immsrc,
@@ -328,7 +337,7 @@ module mux3 #(parameter WIDTH = 8)(
    
 endmodule // mux3
 
-module top (
+module top1 (
   input  logic clk, reset,
   output logic [31:0] WriteData, DataAdr,
   output logic 	MemWrite
@@ -338,12 +347,12 @@ module top (
   
   // instantiate processor and memories
   riscvsingle rv32single (clk, reset, PC, Instr, MemWrite, DataAdr, WriteData, ReadData);
-  imem imem (PC, Instr);
-  dmem dmem (clk, MemWrite, DataAdr, WriteData, ReadData);
+  ime1 ime1 (PC, Instr);
+  dme1 dme1 (clk, MemWrite, DataAdr, WriteData, ReadData);
    
 endmodule // top
 
-module imem (
+module ime1 (
   input  logic [31:0] a,
   output logic [31:0] rd
   );
@@ -352,9 +361,9 @@ module imem (
   
   assign rd = RAM[a[31:2]]; // word aligned
    
-endmodule // imem
+endmodule // ime1
 
-module dmem (
+module dme1 (
   input logic clk, we,
   input  logic [31:0] a, wd,
   output logic [31:0] rd
@@ -366,7 +375,7 @@ module dmem (
   always_ff @(posedge clk)
     if (we) RAM[a[31:2]] <= wd;
   
-endmodule // dmem
+endmodule // dme1
 
 module alu (
   input  logic [31:0] a, b,
@@ -403,6 +412,22 @@ module alu (
   assign v = ~(alucontrol[0] ^ a[31] ^ b[31]) & (a[31] ^ sum[31]) & isAddSub;
    
 endmodule // alu
+
+module comparator (
+  input logic [31:0] a, b,
+  input logic [2:0] funct3,
+  output logic to_branch);
+always_comb
+  case(funct3)
+    3'b000: to_branch = (a==b); //BEQ
+    3'b001: to_branch = (a!=b); //bne
+    3'b100: to_branch = (($signed(a)< $signed(b))); //blt
+    3'b101: to_branch = ($signed($igned(a)>=$signed(b))); //bge
+    3'b110: to_branch = (a<b); //BLTU
+    3'b111: to_branch = (a>=b); //bgeu
+    default: to_branch = 1'b0;
+  endcase
+endmodule //comparator
 
 module regfile (
   input logic clk, 
