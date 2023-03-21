@@ -55,13 +55,15 @@ module testbench();
   logic clk;
   logic reset;
   logic [31:0] InstructionOut;
+  logic PCReady;
 
   logic [31:0] WriteData;
   logic [31:0] DataAdr;
   logic MemWrite;
+  logic MemStrobe;
 
   // instantiate device to be tested
-  top dut(clk, reset, WriteData, DataAdr, MemWrite, InstructionOut);
+  top dut(clk, reset, PCReady, WriteData, DataAdr, MemWrite, InstructionOut, MemStrobe);
 
   initial begin
     string memfilename;
@@ -104,12 +106,13 @@ module testbench();
 endmodule // testbench
 
 module riscvsingle (
-  input  logic clk, reset,
+  input  logic clk, reset, PCReady,
   output logic [31:0] PC,
   input  logic [31:0] Instr,
   output logic 	MemWrite,
   output logic [31:0] ALUResult, WriteData,
-  input  logic [31:0] ReadData
+  input  logic [31:0] ReadData,
+  output logic       MemStrobe
   );
    
   logic RegWrite, Jump, Zero, Load, Store, storeInstFlag;
@@ -122,9 +125,9 @@ module riscvsingle (
                 ResultSrc, MemWrite, PCSrc, 
                 RegWrite, Jump, 
                 uppImm, ImmSrc, ALUControl, Branchcontrol, 
-                ALUSrc, Load, Store, Loadcontrol, Storecontrol, storeInstFlag);
+                ALUSrc, Load, Store, Loadcontrol, Storecontrol, storeInstFlag, MemStrobe);
     
-  datapath dp (clk, reset, ALUSrc, ResultSrc, PCSrc, 
+  datapath dp (clk, reset, PCReady, ALUSrc, ResultSrc, PCSrc, 
               RegWrite, 
               ImmSrc, ALUControl, 
               Zero, PC, Instr, 
@@ -149,12 +152,13 @@ module controller (
   output logic [1:0] ALUSrc,
   output logic       Load, Store,
   output logic [2:0] Loadcontrol, Storecontrol,
-  output logic       storeInstFlag);
+  output logic       storeInstFlag,
+  output logic       MemStrobe);
    
    logic [1:0] ALUOp;
    logic Branch, isBranch;
    
-  maindec md (op, ResultSrc, MemWrite, Branch, RegWrite, Jump, ImmSrc, ALUOp, ALUSrc, uppImm, Load, Store);
+  maindec md (op, ResultSrc, MemWrite, Branch, RegWrite, Jump, ImmSrc, ALUOp, ALUSrc, uppImm, Load, Store, MemStrobe);
   aludec ad (op[5], funct3, funct7b5, ALUOp, ALUControl, storeInstFlag);
   bdec bdec (Branch, funct3, Branchcontrol, isBranch);
   loaddec loaddec(Load, funct3, Loadcontrol);
@@ -173,20 +177,21 @@ module maindec (
   output logic [2:0] ImmSrc,
   output logic [1:0] ALUOp,
   output logic [1:0] ALUSrc, uppImm,
-  output logic       Load, Store
+  output logic       Load, Store,
+  output logic      MemStrobe
   );
    
   logic [16:0] controls;
   
   // TODO: Might want to add an extra bit for DDR3 strobe (e.g., a 1 for LW and SW, a 0 for R-type, beq, I-type ALU, and JAL)
-  // controls = RegWrite_ImmSrc_ALUSrc_MemWrite_ResultSrc_Branch_ALUOp_Jump
-  assign {RegWrite, ImmSrc, ALUSrc, MemWrite, ResultSrc, Branch, ALUOp, Jump, uppImm, Load, Store} = controls;
+  // controls = RegWrite_ImmSrc_ALUSrc_MemWrite_ResultSrc_Branch_ALUOp_Jump_Jalr_Auipc_MemStrobe
+  assign {RegWrite, ImmSrc, ALUSrc, MemWrite, ResultSrc, Branch, ALUOp, Jump, uppImm, Load, Store, MemStrobe} = controls;
 
   always_comb
     case(op) 
       7'b1100011: controls = 17'b0_010_00_0_00_1_01_0_00_0_0; // R–type
       7'b0110011: controls = 17'b1_xxx_00_0_00_0_10_0_00_0_0; // I–type
-      7'b0000011: controls = 17'b1_000_01_0_01_0_00_0_00_1_0; // loads
+      7'b0000011: controls = 17'b1_000_01_0_01_0_00_0_00_1_1; // loads
       7'b0100011: controls = 17'b0_001_01_1_00_0_00_0_00_0_1; // stores
       7'b0010011: controls = 17'b1_000_01_0_00_0_10_0_00_0_0; // B-type
       7'b0110111: controls = 17'b1_100_01_0_00_0_00_0_01_0_0; // lui
@@ -269,7 +274,7 @@ module aludec (
 endmodule // aludec
 
 module datapath (
-  input  logic       clk, reset,
+  input  logic       clk, reset, PCReady,
   input  logic [1:0] ALUSrc, ResultSrc,
   input  logic       PCSrc,
   input  logic       RegWrite,
@@ -296,6 +301,7 @@ module datapath (
   logic [31:0] WriteData2;
    
   // next PC logic
+ // flopenr #(32) pcreg (clk, reset, PCReady, PCNext, PC);
   flopr #(32) pcreg (clk, reset, PCNext, PC); // TODO: want to change to flopenr when implementing; only ENABLE when DDR3 is DONE
   adder  pcadd4 (PC, 32'd4, PCPlus4);
   adder  pcaddbranch (PC, ImmExt, PCTarget2);
@@ -572,16 +578,17 @@ module storealu (input logic [2:0] Storecontrol,
 endmodule
 
 module top (
-  input  logic clk, reset,
+  input  logic clk, reset, PCReady
   output logic [31:0] WriteData, DataAdr,
   output logic 	MemWrite,
-  output logic [31:0] InstructionOut
+  output logic [31:0] InstructionOut,
+  output logic MemStrobe
   );
    
   logic [31:0] 		PC, Instr, ReadData;
   
   // instantiate processor and memories
-  riscvsingle rv32single (clk, reset, PC, Instr, MemWrite, DataAdr, WriteData, ReadData);
+  riscvsingle rv32single (clk, reset, PCReady, PC, Instr, MemWrite, DataAdr, WriteData, ReadData, MemStrobe);
   imem imem (PC, Instr);
   dmem dmem (clk, MemWrite, DataAdr, WriteData, ReadData);
   always_comb begin
