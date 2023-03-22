@@ -178,7 +178,7 @@ module maindec (
   output logic      MemStrobe
   );
    
-  logic [17:0] controls;
+  logic [16:0] controls;
   
   // TODO: Might want to add an extra bit for DDR3 strobe (e.g., a 1 for LW and SW, a 0 for R-type, beq, I-type ALU, and JAL)
   // controls = RegWrite_ImmSrc_ALUSrc_MemWrite_ResultSrc_Branch_ALUOp_Jump_Jalr_Auipc_MemStrobe
@@ -188,15 +188,15 @@ module maindec (
 
     case(op) 
 
-      7'b1100011: controls = 18'b0_010_00_0_00_1_01_0_00_0_0_0; // R–types
-      7'b0110011: controls = 18'b1_xxx_00_0_00_0_10_0_00_0_0_0; // I–types
-      7'b0000011: controls = 18'b1_000_01_0_01_0_00_0_00_1_0_1; // loads
-      7'b0100011: controls = 18'b0_001_01_1_00_0_00_0_00_0_1_1; // stores
-      7'b0010011: controls = 18'b1_000_01_0_00_0_10_0_00_0_0_0; // B-types
-      7'b0110111: controls = 18'b1_100_01_0_00_0_00_0_01_0_0_0; // lui
-      7'b0010111: controls = 18'b1_100_01_0_00_0_00_0_11_0_0_0; // auipc
-      7'b1101111: controls = 18'b1_011_00_0_10_0_00_1_00_0_0_0; // jal
-      7'b1100111: controls = 18'b1_000_01_0_11_0_10_1_00_0_0_0; // jalr
+      7'b1100011: controls = 17'b0_010_00_0_00_1_01_0_00_0_0; // R–types
+      7'b0110011: controls = 17'b1_xxx_00_0_00_0_10_0_00_0_0; // I–types
+      7'b0000011: controls = 17'b1_000_01_0_01_0_00_0_00_1_0; // loads
+      7'b0100011: controls = 17'b0_001_01_1_00_0_00_0_00_0_1; // stores
+      7'b0010011: controls = 17'b1_000_01_0_00_0_10_0_00_0_0; // B-types
+      7'b0110111: controls = 17'b1_100_01_0_00_0_00_0_01_0_0; // lui
+      7'b0010111: controls = 17'b1_100_01_0_00_0_00_0_11_0_0; // auipc
+      7'b1101111: controls = 17'b1_011_00_0_10_0_00_1_00_0_0; // jal
+      7'b1100111: controls = 17'b1_000_01_0_11_0_10_1_00_0_0; // jalr
       default: controls = 17'bx_xxx_xx_x_xx_x_xx_x_xx_x_x_x; // ???
 
     endcase
