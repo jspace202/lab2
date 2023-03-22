@@ -67,7 +67,7 @@ module testbench();
 
   initial begin
     string memfilename;
-    memfilename = {"../riscvtest/lab1-tests/addi.memfile"};
+    memfilename = {"../riscvtest/lab1-tests/auipc.memfile"};
     $readmemh(memfilename, dut.imem.RAM);
     $readmemh(memfilename, dut.dmem.RAM);
   end
@@ -346,9 +346,8 @@ module datapath (
   output logic [31:0] ALUResult, WriteData,
   input  logic [31:0] ReadData,
   input  logic [1:0] uppImm,
-  input  logic [2:0] branchctrl,
+  input  logic [2:0] branchctrl, loadctrl, storectrl,
   input  logic       Jump,
-  input  logic [2:0] loadctrl, storectrl,
   input  logic       storeInstFlag);
    
   logic [31:0] PCNext, PCPlus4, PCTarget;
@@ -356,7 +355,7 @@ module datapath (
   logic [31:0] SrcA, SrcB, SrcC;
   logic [31:0] Result;
   logic        PCSrc2;
-  logic [31:0] PCTarget2, Readdata2, WriteData2;
+  logic [31:0] PCTarget2, ReadData2, WriteData2;
    
   // next PC logic
   flopr #(32) pcreg (clk, reset, PCNext, PC); // TODO: want to change to flopenr when implementing; only ENABLE when DDR3 is DONE
@@ -373,10 +372,10 @@ module datapath (
   // ALU logic
   mux2 #(32)  srccmux (WriteData2, ImmExt, ALUSrc[0], SrcC);
   alu  alu (SrcA, SrcB, ALUControl, ALUResult, Zero, uppImm);
-  mux3 #(32) resultmux (ALUResult, Readdata2, PCPlus4, ResultSrc, Result);
+  mux3 #(32) resultmux (ALUResult, ReadData2, PCPlus4, ResultSrc, Result);
   storealu storealu (storectrl, WriteData2, ALUResult, ReadData, WriteData);
   shift12 #(32) srcbmux (SrcC, PC, uppImm, SrcB);
-  loadalu loadalu (loadctrl, ReadData, ALUResult, Readdata2);
+  loadalu loadalu (loadctrl, ReadData, ALUResult, ReadData2);
 
 endmodule // datapath
 
@@ -562,8 +561,9 @@ module alu (
 endmodule // alu
 
 module loadalu (input logic [2:0] loadctrl,
-             input logic [31:0] ReadMem, byteAddress,
-             output logic [31:0] WriteMem
+             output logic [31:0] WriteToMem,
+             input logic [31:0] ReadMem, byteAddress
+
             );
 
     logic [31:0] shiftedReadMem;
@@ -571,12 +571,12 @@ module loadalu (input logic [2:0] loadctrl,
     always_comb begin
       shiftedReadMem = ReadMem >> (byteAddress[1:0] * 8);
       case(loadctrl)
-        3'b000: WriteMem = shiftedReadMem[7] ? (shiftedReadMem | 32'hFFFFFF00) : (shiftedReadMem & 32'h000000FF);
-        3'b001: WriteMem = shiftedReadMem[15] ? (shiftedReadMem | 32'hFFFF0000) : (shiftedReadMem & 32'h0000FFFF);
-        3'b010: WriteMem = ReadMem;
-        3'b100: WriteMem = unsigned'(shiftedReadMem) & 32'h000000FF;
-        3'b101: WriteMem = unsigned'(shiftedReadMem) & 32'h0000FFFF;
-        default: WriteMem = 32'bx;
+        3'b000: WriteToMem = shiftedReadMem[7] ? (shiftedReadMem | 32'hFFFFFF00) : (shiftedReadMem & 32'h000000FF);
+        3'b001: WriteToMem = shiftedReadMem[15] ? (shiftedReadMem | 32'hFFFF0000) : (shiftedReadMem & 32'h0000FFFF);
+        3'b010: WriteToMem = ReadMem;
+        3'b100: WriteToMem = unsigned'(shiftedReadMem) & 32'h000000FF;
+        3'b101: WriteToMem = unsigned'(shiftedReadMem) & 32'h0000FFFF;
+        default: WriteToMem = 32'bx;
     endcase
     end
 
@@ -584,22 +584,22 @@ endmodule
 
 module storealu (input logic [2:0] storectrl,
                  input logic [31:0] Regread, byteAddress, ReadMem,
-                 output logic [31:0] WriteMem );
+                 output logic [31:0] WriteToMem );
 
     always_comb begin
       case(storectrl)
       3'b000: begin
-              if(byteAddress[1:0] == 0) WriteMem = (ReadMem & 32'hFFFFFF00) | ((Regread & 32'h000000FF));
-              if(byteAddress[1:0] == 1) WriteMem = (ReadMem & 32'hFFFF00FF) | ((Regread & 32'h000000FF) << 8);
-              if(byteAddress[1:0] == 2) WriteMem = (ReadMem & 32'hFF00FFFF) | ((Regread & 32'h000000FF) << 16);
-              if(byteAddress[1:0] == 3) WriteMem = (ReadMem & 32'h00FFFFFF) | ((Regread & 32'h000000FF) << 24);
+              if(byteAddress[1:0] == 0) WriteToMem = (ReadMem & 32'hFFFFFF00) | ((Regread & 32'h000000FF));
+              if(byteAddress[1:0] == 1) WriteToMem = (ReadMem & 32'hFFFF00FF) | ((Regread & 32'h000000FF) << 8);
+              if(byteAddress[1:0] == 2) WriteToMem = (ReadMem & 32'hFF00FFFF) | ((Regread & 32'h000000FF) << 16);
+              if(byteAddress[1:0] == 3) WriteToMem = (ReadMem & 32'h00FFFFFF) | ((Regread & 32'h000000FF) << 24);
               end
       3'b001: begin
-              if(byteAddress[1:0] == 0) WriteMem = (ReadMem & 32'hFFFF0000) | ((Regread & 32'h0000FFFF));
-              if(byteAddress[1:0] == 2) WriteMem = (ReadMem & 32'h0000FFFF) | ((Regread & 32'h0000FFFF) << 16);
+              if(byteAddress[1:0] == 0) WriteToMem = (ReadMem & 32'hFFFF0000) | ((Regread & 32'h0000FFFF));
+              if(byteAddress[1:0] == 2) WriteToMem = (ReadMem & 32'h0000FFFF) | ((Regread & 32'h0000FFFF) << 16);
               end
-      3'b010: WriteMem = Regread;
-      default: WriteMem = 32'bx;
+      3'b010: WriteToMem = Regread;
+      default: WriteToMem = 32'bx;
     endcase
     end
 
