@@ -16,47 +16,49 @@
 # ** Warning: (vdel-134) Unable to remove locked optimized design "_opt1".  Locker is jspac@DESKTOP-OSMOMUR.
 # ** Warning: (vdel-134) Unable to remove locked optimized design "_opt2".  Locker is jspac@DESKTOP-OSMOMUR.
 # ** Warning: (vdel-134) Unable to remove locked optimized design "_opt3".  Locker is jspac@DESKTOP-OSMOMUR.
+# ** Warning: (vdel-134) Unable to remove locked optimized design "_opt4".  Locker is jspac@DESKTOP-OSMOMUR.
+# ** Warning: (vdel-134) Unable to remove locked optimized design "_opt5".  Locker is jspac@DESKTOP-OSMOMUR.
 # ** Warning: (vlib-34) Library already exists at "work".
 # Errors: 0, Warnings: 1
 # Model Technology ModelSim SE-64 vlog 2021.1 Compiler 2021.01 Jan 19 2021
-# Start time: 14:31:48 on Mar 21,2023
+# Start time: 19:41:35 on Mar 21,2023
 # vlog -reportprogress 300 riscv_single.sv 
 # -- Compiling module testbench
 # -- Compiling module riscvsingle
 # -- Compiling module controller
 # -- Compiling module maindec
 # -- Compiling module aludec
+# -- Compiling module loaddec
+# -- Compiling module storedec
+# -- Compiling module branchdec
 # -- Compiling module datapath
 # -- Compiling module adder
-# -- Compiling module pcaluadder
+# -- Compiling module PCadder
 # -- Compiling module extend
 # -- Compiling module flopr
 # -- Compiling module flopenr
 # -- Compiling module mux2
 # -- Compiling module mux3
 # -- Compiling module shift12
-# -- Compiling module bdec
-# -- Compiling module blu
-# -- Compiling module loaddec
-# -- Compiling module storedec
-# -- Compiling module loadalu
-# -- Compiling module storealu
 # -- Compiling module top
 # -- Compiling module imem
 # -- Compiling module dmem
 # -- Compiling module alu
+# -- Compiling module loadalu
+# -- Compiling module storealu
+# -- Compiling module branchalu
 # -- Compiling module regfile
 # 
 # Top level modules:
 # 	testbench
 # 	flopenr
-# End time: 14:31:49 on Mar 21,2023, Elapsed time: 0:00:01
+# End time: 19:41:35 on Mar 21,2023, Elapsed time: 0:00:00
 # Errors: 0, Warnings: 0
 # vsim -debugdb -voptargs="+acc" work.testbench 
-# Start time: 14:31:49 on Mar 21,2023
+# Start time: 19:41:35 on Mar 21,2023
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vsim-8611) Generating debug db.
-# ** Note: (vopt-4301) Memory core inferred for signal 'RAM' width=32, depth=1501, type=RAM at location riscv_single.sv:610
+# ** Note: (vopt-4301) Memory core inferred for signal 'RAM' width=32, depth=1501, type=RAM at location riscv_single.sv:517
 # Loading sv_std.std
 # Loading work.testbench(fast)
 # Loading work.top(fast)
@@ -64,34 +66,44 @@
 # Loading work.controller(fast)
 # Loading work.maindec(fast)
 # Loading work.aludec(fast)
-# Loading work.bdec(fast)
 # Loading work.loaddec(fast)
 # Loading work.storedec(fast)
+# Loading work.branchdec(fast)
 # Loading work.datapath(fast)
 # Loading work.flopr(fast)
 # Loading work.adder(fast)
-# Loading work.blu(fast)
-# Loading work.pcaluadder(fast)
 # Loading work.mux2(fast)
+# Loading work.branchalu(fast)
+# Loading work.PCadder(fast)
 # Loading work.regfile(fast)
 # Loading work.extend(fast)
+# Loading work.alu(fast)
+# Loading work.mux3(fast)
 # Loading work.storealu(fast)
 # Loading work.shift12(fast)
-# Loading work.alu(fast)
 # Loading work.loadalu(fast)
-# Loading work.mux3(fast)
 # Loading work.imem(fast)
 # Loading work.dmem(fast)
 # ** Note: (vsim-8900) Creating design debug database vsim.dbg.
 # ** Error: (vsim-8357) Internal debugDB error id:ct1  ret:1 table context_tbl already exists
 # ** Warning: (vsim-WLF-5000) WLF file currently in use: vsim.wlf
 #           File in use by: jspac  Hostname: DESKTOP-OSMOMUR  ProcessID: 15824
-#           Attempting to use alternate WLF file "./wlft2h0n4h".
+#           Attempting to use alternate WLF file "./wlftn2eter".
 # ** Warning: (vsim-WLF-5001) Could not open WLF file: vsim.wlf
-#           Using alternate file: ./wlft2h0n4h
+#           Using alternate file: ./wlftn2eter
+# Debug data file does not match loaded design.
+# Debug data file does not match loaded design.
+# ** Error: Could not open the database because of the following problem accessing the required debug information:
+# Debug data file does not match loaded design.
+# Error in macro ./riscv_single.do line 86
+# Could not open the database because of the following problem accessing the required debug information:
+# Debug data file does not match loaded design.
+#     while executing
+# "add schematic -full sim:/testbench/dut/rv32single"
+run 4000
 # Simulation succeeded
-# ** Note: $stop    : riscv_single.sv(88)
-#    Time: 265 ns  Iteration: 1  Instance: /testbench
-# Break in Module testbench at riscv_single.sv line 88
-# Debug data file does not match loaded design.
-# Debug data file does not match loaded design.
+# ** Note: $stop    : riscv_single.sv(91)
+#    Time: 2035 ns  Iteration: 1  Instance: /testbench
+# Break in Module testbench at riscv_single.sv line 91
+# End time: 19:42:27 on Mar 21,2023, Elapsed time: 0:00:52
+# Errors: 2, Warnings: 2
