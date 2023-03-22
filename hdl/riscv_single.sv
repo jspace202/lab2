@@ -11,44 +11,45 @@
 // when the value 25 (0x19) is written to address 100 (0x64)
 
 //   Instruction  opcode    funct3    funct7
-//   add          0110011   000       0000000 - given
-//   sub          0110011   000       0100000 - given
+//   add          0110011   000       0000000 - atp
+//   sub          0110011   000       0100000 - atp
 //   and          0110011   111       0000000 - given
 //   or           0110011   110       0000000 - given
 //   slt          0110011   010       0000000 - given
-//   addi         0010011   000       immediate - given
+//   addi         0010011   000       immediate - atp
 //   andi         0010011   111       immediate - given
 //   ori          0010011   110       immediate - given
 //   slti         0010011   010       immediate - given
-//   beq          1100011   000       immediate - given
-//   lw	          0000011   010       immediate - given
-//   sw           0100011   010       immediate - given
-//   jal          1101111   immediate immediate - given
+//   beq          1100011   000       immediate - atp
+//   lw	          0000011   010       immediate - atp
+//   sw           0100011   010       immediate - atp
+//   jal          1101111   immediate immediate - atp
 
-//   auipc        0010111   immediate immediate - all tests pass
-//   bge          1100011   101       immediate - all tests pass
+// ----------------------TO DO---------------------------
+//   auipc        0010111   immediate immediate - atp
+//   bge          1100011   101       immediate - atp
 //   bgeu         1100011   111       immediate - all tests pass
 //   blt          1100011   100       immediate - all tests pass
-//   bltu         1100011   110       immediate - all tests pass
+//   bltu         1100011   110       immediate - atp
 //   bne          1100011   001       immediate - all tests pass
-//   jalr         1100111   000       immediate - all tests pass
+//   jalr         1100111   000       immediate - atp
 //   lb           0000011   000       immediate - all tests pass
 //   lbu          0000011   100       immediate - all tests pass
-//   lh           0000011   001       immediate - all tests pass
+//   lh           0000011   001       immediate - atp
 //   lhu          0000011   101       immediate - all tests pass
 //   lui          0110111   immediate immediate - all tests pass
-//   sb           0100011   000       immediate - 
-//   sh           0100011   001       immediate - 
-//   sll          0110011   001       0000000   - 
-//   slli         0010011   001       0000000*  - 
-//   sltiu        0010011   011       immediate - 
-//   sltu         0110011   011       0000000   - 
-//   sra          0110011   101       0100000   - 
-//   srai         0010011   101       0100000*  - 
-//   srl          0110011   101       0000000   - 
-//   srli         0010011   101       0000000*  - 
-//   xor          0110011   100       0000000   - 
-//   xori         0010011   100       immediate - 
+//   sb           0100011   000       immediate - atp
+//   sh           0100011   001       immediate - atp
+//   sll          0110011   001       0000000   - atp
+//   slli         0010011   001       0000000*  - atp
+//   sltiu        0010011   011       immediate - atp
+//   sltu         0110011   011       0000000   - atp
+//   sra          0110011   101       0100000   - atp
+//   srai         0010011   101       0100000*  - atp
+//   srl          0110011   101       0000000   - atp
+//   srli         0010011   101       0000000*  - atp
+//   xor          0110011   100       0000000   - atp
+//   xori         0010011   100       immediate - atp
 
 module testbench();
 
@@ -60,12 +61,13 @@ module testbench();
   logic [31:0] DataAdr;
   logic MemWrite;
 
+  logic [31:0] instEcall = 32'b00000000000000000000000001110011;
   // instantiate device to be tested
   top dut(clk, reset, WriteData, DataAdr, MemWrite, InstructionOut);
 
   initial begin
     string memfilename;
-    memfilename = {"../riscvtest/lab1-tests/sb.memfile"};
+    memfilename = {"../riscvtest/lab1-tests/addi.memfile"};
     $readmemh(memfilename, dut.imem.RAM);
     $readmemh(memfilename, dut.dmem.RAM);
   end
@@ -83,7 +85,8 @@ module testbench();
 
   always @(negedge clk) 
     begin
-        if(InstructionOut == 32'b00000000000000000000000001110011) begin
+        if(instEcall == InstructionOut) 
+        begin
           $display("Simulation succeeded");
           $stop;
         end
@@ -212,59 +215,123 @@ module aludec (
   always_comb
     case(ALUOp)
       2'b00: begin
-             ALUControl = 4'b0000; // addition
-             storeInstFlag = 1'b0;
-             end
+        ALUControl = 4'b0000; // addition
+        storeInstFlag = 1'b0;
+        end
       2'b01: begin
-             ALUControl = 4'b0001; // subtraction
-             storeInstFlag = 1'b0;
-             end
+        ALUControl = 4'b0001; // subtraction
+        storeInstFlag = 1'b0;
+        end
       default: case(funct3) // R–type or I–type ALU
           3'b000: begin
-                  if (RtypeSub)
-                    ALUControl = 4'b0001; // sub
-                  else
-                    ALUControl = 4'b0000; // add, addi
-                    storeInstFlag = 1'b0;
-                  end
+            if (RtypeSub)
+            ALUControl = 4'b0001; // sub
+            else
+            ALUControl = 4'b0000; // add, addi
+            storeInstFlag = 1'b0;
+            end
           3'b010: begin
-                  ALUControl = 4'b0101; // slt, slti
-                  storeInstFlag = 1'b0;
-                  end
+            ALUControl = 4'b0101; // slt, slti
+            storeInstFlag = 1'b0;
+            end
           3'b110: begin
-                  ALUControl = 4'b0011; // or, ori
-                  storeInstFlag = 1'b0;
-                  end
+            ALUControl = 4'b0011; // or, ori
+            storeInstFlag = 1'b0;
+            end
           3'b111: begin
-                  ALUControl = 4'b0010; // and, andi
-                  storeInstFlag = 1'b0;
-                  end
+            ALUControl = 4'b0010; // and, andi
+            storeInstFlag = 1'b0;
+            end
           3'b001: begin
-                  ALUControl = 4'b0100; // sll, slli
-                  storeInstFlag = 1'b1;
-                  end
+            ALUControl = 4'b0100; // sll, slli
+            storeInstFlag = 1'b1;
+            end
           3'b011: begin
-                  ALUControl = 4'b0110; // sltu, sltiu
-                  storeInstFlag = 1'b0;
-                  end
+            ALUControl = 4'b0110; // sltu, sltiu
+            storeInstFlag = 1'b0;
+            end
           3'b101: begin
-                  if(shiftRight) ALUControl = 4'b0111; // sra, srai
-                  else ALUControl = 4'b1000; // srl, srli
-                  storeInstFlag = 1'b1;
-                  end
+            if(shiftRight) ALUControl = 4'b0111; // sra, srai
+            else ALUControl = 4'b1000; // srl, srli
+            storeInstFlag = 1'b1;
+              end
           3'b100: begin
-                  ALUControl = 4'b1001; 
-                  storeInstFlag = 1'b0;
-                  end
+            ALUControl = 4'b1001; 
+            storeInstFlag = 1'b0;
+            end
           default: begin
-                  ALUControl = 4'bxxxx; // ???
-                  storeInstFlag = 1'bx;
-                  end
+            ALUControl = 4'bxxxx; // ???
+            storeInstFlag = 1'bx;
+            end
         endcase // case (funct3)      
 
     endcase // case (ALUOp)
    
 endmodule // aludec
+
+module loaddec (input logic Load,
+                input logic [2:0] funct3,
+                output logic [2:0] loadctrl);
+
+    always_comb
+    if(Load)begin
+    case(funct3)
+      3'b000: loadctrl = 3'b000;
+      3'b001: loadctrl = 3'b001;
+      3'b010: loadctrl = 3'b010;
+      3'b100: loadctrl = 3'b100;
+      3'b101: loadctrl = 3'b101;
+      default: loadctrl = 3'bx;
+    endcase
+    end
+    else loadctrl = 3'bx;
+
+endmodule
+
+module storedec (input logic Store,
+                input logic [2:0] funct3,
+                output logic [2:0] storectrl);
+
+    always_comb
+      if(Store)begin
+      case(funct3)
+        3'b000: storectrl = 3'b000;
+        3'b001: storectrl = 3'b001;
+        3'b010: storectrl = 3'b010;
+        default: storectrl = 3'bx;
+      endcase
+      end
+      else storectrl = 3'bx;
+
+endmodule
+
+module branchdec (input logic Branch,
+             input logic [2:0] funct3,
+             output logic [2:0] branchctrl,
+             output logic branchflag
+            );
+
+    always_comb
+    if(Branch)begin
+    case(funct3)
+      3'b001: begin branchctrl = 3'b001;
+              branchflag = 1'b1; end
+      3'b000: begin branchctrl = 3'b000;
+              branchflag = 1'b1; end
+      3'b100: begin branchctrl = 3'b100;
+              branchflag = 1'b1; end
+      3'b101: begin branchctrl = 3'b101;
+              branchflag = 1'b1; end
+      3'b110: begin branchctrl = 3'b110;
+              branchflag = 1'b1; end
+      3'b111: begin branchctrl = 3'b111;
+              branchflag = 1'b1; end
+      default: branchctrl = 3'bx;
+    endcase
+    end
+    else branchflag = 1'b0;
+
+endmodule
 
 module datapath (
   input  logic       clk, reset,
@@ -313,24 +380,22 @@ module datapath (
 
 endmodule // datapath
 
+module adder (input  logic [31:0] a, b,
+              output logic [31:0] y);
+  
+  assign y = a + b;
+   
+endmodule
+
 module PCadder (input  logic        Jump,
                 input  logic [31:0] a, b,
                 output logic [31:0] y,
                 input  logic [1:0] ALUSrc);
   
   always_comb
-  if(Jump & !ALUSrc[0] & b != 32'bx)begin
-  y = a + b;
-  end
+  if(Jump & !ALUSrc[0] & b != 32'bx) y = a + b;
   else if (Jump & ALUSrc[0]) y = b;
   else y = a;
-   
-endmodule
-
-module adder (input  logic [31:0] a, b,
-              output logic [31:0] y);
-  
-  assign y = a + b;
    
 endmodule
 
@@ -410,111 +475,6 @@ module shift12 #(parameter WIDTH = 8)
     );
 
     assign y = s[0] ? (s[1] ? (d0 << 12) + d1 : (d0 << 12)) : d0;
-
-endmodule
-
-module branchalu (input logic Jump,
-            input logic [31:0] a, b,
-            input logic [2:0] branchctrl,
-            input logic       PCSource,
-            output logic      PCSOut
-            ); 
-    always_comb
-      if(PCSource & !Jump) begin
-      case(branchctrl)
-        3'b001: begin
-                if(a != b) PCSOut = 1'b1;
-                else PCSOut = 1'b0;
-                end
-        3'b000: begin
-                if(a == b) PCSOut = 1'b1;
-                else PCSOut = 1'b0;
-                end
-        3'b100: begin
-                if(signed'(a) < signed'(b)) PCSOut = 1'b1;
-                else PCSOut = 1'b0;
-                end
-        3'b101: begin
-                if(signed'(a) >= signed'(b)) PCSOut = 1'b1;
-                else PCSOut = 1'b0;
-                end
-        3'b110: begin
-                if(unsigned'(a) < unsigned'(b)) PCSOut = 1'b1;
-                else PCSOut = 1'b0;
-                end
-        3'b111: begin
-                if(unsigned'(a) >= unsigned'(b)) PCSOut = 1'b1;
-                else PCSOut = 1'b0;
-                end
-        default: PCSOut = 3'bx;
-      endcase
-      end
-      else if (Jump) PCSOut = 1'b1;
-      else PCSOut = 1'b0;
-
-endmodule
-
-module loaddec (input logic Load,
-                input logic [2:0] funct3,
-                output logic [2:0] loadctrl);
-
-    always_comb
-    if(Load)begin
-    case(funct3)
-      3'b000: loadctrl = 3'b000;
-      3'b001: loadctrl = 3'b001;
-      3'b010: loadctrl = 3'b010;
-      3'b100: loadctrl = 3'b100;
-      3'b101: loadctrl = 3'b101;
-      default: loadctrl = 3'bx;
-    endcase
-    end
-    else loadctrl = 3'bx;
-
-endmodule
-
-module storedec (input logic Store,
-                input logic [2:0] funct3,
-                output logic [2:0] storectrl);
-
-    always_comb
-      if(Store)begin
-      case(funct3)
-        3'b000: storectrl = 3'b000;
-        3'b001: storectrl = 3'b001;
-        3'b010: storectrl = 3'b010;
-        default: storectrl = 3'bx;
-      endcase
-      end
-      else storectrl = 3'bx;
-
-endmodule
-
-module branchdec (input logic Branch,
-             input logic [2:0] funct3,
-             output logic [2:0] branchctrl,
-             output logic branchflag
-            );
-
-    always_comb
-    if(Branch)begin
-    case(funct3)
-      3'b001: begin branchctrl = 3'b001;
-              branchflag = 1'b1; end
-      3'b000: begin branchctrl = 3'b000;
-              branchflag = 1'b1; end
-      3'b100: begin branchctrl = 3'b100;
-              branchflag = 1'b1; end
-      3'b101: begin branchctrl = 3'b101;
-              branchflag = 1'b1; end
-      3'b110: begin branchctrl = 3'b110;
-              branchflag = 1'b1; end
-      3'b111: begin branchctrl = 3'b111;
-              branchflag = 1'b1; end
-      default: branchctrl = 3'bx;
-    endcase
-    end
-    else branchflag = 1'b0;
 
 endmodule
 
@@ -642,6 +602,47 @@ module storealu (input logic [2:0] storectrl,
       default: WriteMem = 32'bx;
     endcase
     end
+
+endmodule
+
+module branchalu (input logic Jump,
+            input logic [31:0] a, b,
+            input logic [2:0] branchctrl,
+            input logic       PCSource,
+            output logic      PCSOut
+            ); 
+    always_comb
+      if(PCSource & !Jump) begin
+      case(branchctrl)
+        3'b001: begin
+                if(a != b) PCSOut = 1'b1;
+                else PCSOut = 1'b0;
+                end
+        3'b000: begin
+                if(a == b) PCSOut = 1'b1;
+                else PCSOut = 1'b0;
+                end
+        3'b100: begin
+                if(signed'(a) < signed'(b)) PCSOut = 1'b1;
+                else PCSOut = 1'b0;
+                end
+        3'b101: begin
+                if(signed'(a) >= signed'(b)) PCSOut = 1'b1;
+                else PCSOut = 1'b0;
+                end
+        3'b110: begin
+                if(unsigned'(a) < unsigned'(b)) PCSOut = 1'b1;
+                else PCSOut = 1'b0;
+                end
+        3'b111: begin
+                if(unsigned'(a) >= unsigned'(b)) PCSOut = 1'b1;
+                else PCSOut = 1'b0;
+                end
+        default: PCSOut = 3'bx;
+      endcase
+      end
+      else if (Jump) PCSOut = 1'b1;
+      else PCSOut = 1'b0;
 
 endmodule
 
